@@ -1,0 +1,75 @@
+[
+  {
+    "model": "users.user",
+    "pk": 1,
+    "fields": {
+      "email": "user1@example.com",
+      "password": "pbkdf2_sha256$320000$Jj4h0D2sPVxX$QPWQ0ZdWKxm3iIGqvIo/2qU7IQp3af6/U4OBwK0xkHxw=",
+      "phone": "",
+      "city": "",
+      "is_active": true,
+      "is_staff": false,
+      "date_joined": "2023-10-24T12:00:00Z"
+    }
+  },
+  {
+    "model": "users.user",
+    "pk": 2,
+    "fields": {
+      "email": "user2@example.com",
+      "password": "pbkdf2_sha256$320000$Jj4h0D2sPVxX$QPWQ0ZdWKxm3iIGqvIo/2qU7IQp3af6/U4OBwK0xkHxw=",
+      "phone": "",
+      "city": "",
+      "is_active": true,
+      "is_staff": false,
+      "date_joined": "2023-10-24T12:00:00Z"
+    }
+  },
+  {
+    "model": "lms.course",
+    "pk": 1,
+    "fields": {
+      "name": "Test Course"
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 1,
+    "fields": {
+      "name": "Lesson 2",
+      "course": 1
+    }
+  },
+  {
+    "model": "lms.lesson",
+    "pk": 2,
+    "fields": {
+      "name": "Lesson 3",
+      "course": 1
+    }
+  },
+  {
+    "model": "users.payment",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "payment_date": "2023-10-24T12:00:00Z",
+      "amount": 150.0,
+      "payment_method": "cash",
+      "course": 1,
+      "lesson": null
+    }
+  },
+  {
+    "model": "users.payment",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "payment_date": "2023-10-24T12:00:00Z",
+      "amount": 50.0,
+      "payment_method": "bank_transfer",
+      "course": null,
+      "lesson": 1
+    }
+  }
+]
