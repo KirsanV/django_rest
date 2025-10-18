@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from .models import Course, Lesson
+from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer, PaymentSerializer
 from rest_framework import generics
 from users.models import Payment
@@ -8,11 +8,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions
 from .permissions import IsOwner, IsNotModerator
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
+from .paginators import StandardResultsSetPagination
+
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    pagination_class = StandardResultsSetPagination
 
     def get_permissions(self):
         if self.action == 'list':
@@ -41,6 +47,7 @@ class LessonListCreate(generics.ListCreateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -77,4 +84,22 @@ class PaymentViewSet(viewsets.ModelViewSet):
     ordering_fields = ['payment_date', 'amount']
     ordering = ['-payment_date']
 
+class CourseSubscriptionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        course_id = request.data.get('course')
+        course = get_object_or_404(Course, id=course_id)
+
+        subs_qs = Subscription.objects.filter(user=user, course=course)
+
+        if subs_qs.exists():
+            subs_qs.delete()
+            message = 'подписка удалена'
+        else:
+            Subscription.objects.create(user=user, course=course)
+            message = 'подписка добавлена'
+
+        return Response({"message": message})
 
