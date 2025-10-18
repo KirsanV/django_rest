@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import Payment
 
 User = get_user_model()
 
@@ -27,4 +28,20 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'email', 'phone', 'city')
+        read_only_fields = ('id',)
+
+class PaymentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ('course', 'lesson', 'amount', 'payment_method')
+
+
+class StripePaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = (
+            'id', 'user', 'course', 'lesson', 'amount', 'payment_method',
+            'stripe_product_id', 'stripe_price_id', 'stripe_session_id',
+            'stripe_payment_url', 'stripe_status'
+        )
         read_only_fields = ('id',)

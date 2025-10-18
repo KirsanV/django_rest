@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'users',
     'lms',
     'django_extensions',
@@ -113,4 +114,17 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'LMS API',
+    'DESCRIPTION': 'Документация по API проекта',
+    'VERSION': 'v1',
+    'OPENAPI_VERSION': '3.0.3',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'USE_SESSION_AUTH': False,
+    'SCHEMA_PATH_PREFIX': '/api/',
+}
+
+STRIPE_API_KEY = os.getenv('STRIPE_API_KEY')

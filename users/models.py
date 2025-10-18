@@ -98,6 +98,37 @@ class Payment(models.Model):
         help_text='Метод оплаты (наличные, перевод и т.д.)'
     )
 
+
+    stripe_product_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='Stripe Product ID'
+    )
+    stripe_price_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='Stripe Price ID'
+    )
+    stripe_session_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name='Stripe Session ID'
+    )
+    stripe_payment_url = models.URLField(
+        blank=True,
+        null=True,
+        verbose_name='Stripe Payment URL'
+    )
+    stripe_status = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='Stripe Status'
+    )
+
     def __str__(self):
         return f"Платеж {self.id} от {self.user.email} на сумму {self.amount} ({self.get_payment_method_display()})"
 
