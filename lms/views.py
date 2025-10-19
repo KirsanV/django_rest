@@ -62,6 +62,11 @@ class CourseViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+    def perform_update(self, serializer):
+        course = serializer.save()
+        from .tasks import send_course_update_email
+        send_course_update_email.delay(course.id)
+
 
 @extend_schema_view(
     list=extend_schema(
