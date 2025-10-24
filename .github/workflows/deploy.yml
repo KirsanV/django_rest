@@ -3,8 +3,6 @@ name: Django CI/CD
 on:
   push:
     branches: [ main, master, hm_35.2 ]
-  pull_request:
-    branches: [ main, master, hm_35.2 ]
 
 env:
   PYTHON_VERSION: '3.13'
@@ -20,23 +18,8 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
         ports:
           - 5432:5432
-
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
 
     steps:
     - uses: actions/checkout@v4
@@ -48,94 +31,36 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install coverage
-
-    - name: Debug environment
-      run: |
-        echo "=== Current directory ==="
-        pwd
-        ls -la
-
-    - name: Create .env file for testing
-      run: |
-        cat > .env << EOF
-        SECRET_KEY=test-secret-key-for-ci-cd-$(openssl rand -hex 32)
-        DEBUG=True
-        ALLOWED_HOSTS=localhost,127.0.0.1,testserver
-        NAME=test_db
-        USER=postgres
-        PASSWORD=postgres
-        HOST=localhost
-        PORT=5432
-        STRIPE_API_KEY=sk_test_dummy
-        CELERY_BROKER_URL=redis://localhost:6379/0
-        CELERY_RESULT_BACKEND=redis://localhost:6379/0
-        CELERY_TIMEZONE=UTC
-        EMAIL_HOST_USER=test@example.com
-        EMAIL_HOST_PASSWORD=test
-        EOF
-        
-        echo "=== .env file created ==="
-        cat .env
-
-    - name: Test database connection
-      run: |
-        PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -c "SELECT version();"
-        echo "PostgreSQL connection successful"
 
     - name: Run migrations
+      env:
+        SECRET_KEY: "test-key-123"
+        NAME: "test_db"
+        USER: "postgres"
+        PASSWORD: "postgres"
+        HOST: "localhost"
+        PORT: "5432"
       run: |
-        echo "=== Setting environment variables ==="
-        export SECRET_KEY="test-secret-key-for-ci-cd-123456"
-        export NAME="test_db"
-        export USER="postgres"
-        export PASSWORD="postgres" 
-        export HOST="localhost"
-        export PORT="5432"
-        
-        echo "=== Testing Django database settings ==="
-        python -c "
-       import os
-        print('SECRET_KEY:', os.environ.get('SECRET_KEY'))
-        print('DB USER:', os.environ.get('USER'))
-        print('DB HOST:', os.environ.get('HOST'))
-        
-    
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-        import django
-        django.setup()
-        
-        from django.conf import settings
-        print('DATABASES settings:')
-        print(' - NAME:', settings.DATABASES['default']['NAME'])
-        print(' - USER:', settings.DATABASES['default']['USER']) 
-        print(' - HOST:', settings.DATABASES['default']['HOST'])
-        "
-        
-            echo "=== Running migrations ==="
-            python manage.py migrate
+        python manage.py migrate
 
-    - name: Run tests with coverage
+    - name: Run tests
+      env:
+        SECRET_KEY: "test-key-123"
+        NAME: "test_db"
+        USER: "postgres"
+        PASSWORD: "postgres"
+        HOST: "localhost"
+        PORT: "5432"
       run: |
-        coverage run --source='.' manage.py test
-        coverage report
-
-    - name: Run specific app tests
-      run: |
-        python manage.py test lms.tests --verbosity=1
-        python manage.py test users.tests --verbosity=1
+        python manage.py test
 
   deploy:
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/hm_35.2'
+    if: github.ref == 'refs/heads/hm_35.2'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -144,14 +69,10 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           cd /var/www/myapp
-          git fetch origin
-          git checkout hm_35.2
           git pull origin hm_35.2
           source venv/bin/activate
           pip install -r requirements.txt
           python manage.py migrate
           python manage.py collectstatic --noinput
-          sudo systemctl daemon-reload
           sudo systemctl restart gunicorn
-          sudo systemctl restart nginx
-          echo " Deployment completed successfully!"
+          echo " Deployed successfully!"
