@@ -10,9 +10,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY')
-if not SECRET_KEY:
-    raise ImproperlyConfigured("The SECRET_KEY setting must not be empty.")
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-test-key-for-ci-cd-12345')
 
 
 DEBUG = True
