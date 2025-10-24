@@ -52,6 +52,14 @@ jobs:
         pip install -r requirements.txt
         pip install coverage
 
+    - name: Debug environment
+      run: |
+        echo "=== Current environment variables ==="
+        env | grep -i postgres
+        echo "=== Current directory ==="
+        pwd
+        ls -la
+
     - name: Create .env file for testing
       run: |
         cat > .env << EOF
@@ -71,22 +79,32 @@ jobs:
         EMAIL_HOST_PASSWORD=test
         EOF
         
-        echo "=== .env file contents ==="
+        echo "=== .env file created ==="
         cat .env
-        echo "=== Checking current directory ==="
-        pwd
-        ls -la
 
-    - name: Wait for PostgreSQL
+    - name: Test database connection
       run: |
-        until pg_isready -h localhost -p 5432; do
-          echo "Waiting for PostgreSQL..."
-          sleep 2
-        done
+        PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -c "SELECT version();"
+        echo "✅ PostgreSQL connection successful"
 
-    - name: Run migrations
+    - name: Run migrations with environment variables
+      env:
+        SECRET_KEY: test-secret-key-for-ci-cd-${{ github.run_id }}
+        NAME: test_db
+        USER: postgres
+        PASSWORD: postgres
+        HOST: localhost
+        PORT: 5432
       run: |
-        python manage.py check
+        echo "=== Testing Django settings ==="
+        python -c "
+        import os
+        from django.conf import settings
+        print('DATABASE USER:', settings.DATABASES['default']['USER'])
+        print('DATABASE HOST:', settings.DATABASES['default']['HOST'])
+        "
+        
+        echo "=== Running migrations ==="
         python manage.py migrate
 
     - name: Run tests with coverage
@@ -96,8 +114,8 @@ jobs:
 
     - name: Run specific app tests
       run: |
-        python manage.py test lms.tests --verbosity=2
-        python manage.py test users.tests --verbosity=2
+        python manage.py test lms.tests --verbosity=1
+        python manage.py test users.tests --verbosity=1
 
   deploy:
     runs-on: ubuntu-latest
@@ -127,4 +145,3 @@ jobs:
           sudo systemctl restart gunicorn
           sudo systemctl restart nginx
           echo " Deployment completed successfully!"
-          echo " Application is running at: http://$(curl -s ifconfig.me)"
