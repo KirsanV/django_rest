@@ -87,8 +87,35 @@ jobs:
 
     - name: Run migrations
       run: |
-        echo "=== Running migrations ==="
-        python manage.py migrate
+        echo "=== Setting environment variables ==="
+        export SECRET_KEY="test-secret-key-for-ci-cd-123456"
+        export NAME="test_db"
+        export USER="postgres"
+        export PASSWORD="postgres" 
+        export HOST="localhost"
+        export PORT="5432"
+        
+        echo "=== Testing Django database settings ==="
+        python -c "
+       import os
+        print('SECRET_KEY:', os.environ.get('SECRET_KEY'))
+        print('DB USER:', os.environ.get('USER'))
+        print('DB HOST:', os.environ.get('HOST'))
+        
+    
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+        import django
+        django.setup()
+        
+        from django.conf import settings
+        print('DATABASES settings:')
+        print(' - NAME:', settings.DATABASES['default']['NAME'])
+        print(' - USER:', settings.DATABASES['default']['USER']) 
+        print(' - HOST:', settings.DATABASES['default']['HOST'])
+        "
+        
+            echo "=== Running migrations ==="
+            python manage.py migrate
 
     - name: Run tests with coverage
       run: |
