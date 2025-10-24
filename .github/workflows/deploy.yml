@@ -54,8 +54,6 @@ jobs:
 
     - name: Debug environment
       run: |
-        echo "=== Current environment variables ==="
-        env | grep -i postgres
         echo "=== Current directory ==="
         pwd
         ls -la
@@ -85,25 +83,10 @@ jobs:
     - name: Test database connection
       run: |
         PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -c "SELECT version();"
-        echo "✅ PostgreSQL connection successful"
+        echo "PostgreSQL connection successful"
 
-    - name: Run migrations with environment variables
-      env:
-        SECRET_KEY: test-secret-key-for-ci-cd-${{ github.run_id }}
-        NAME: test_db
-        USER: postgres
-        PASSWORD: postgres
-        HOST: localhost
-        PORT: 5432
+    - name: Run migrations
       run: |
-        echo "=== Testing Django settings ==="
-        python -c "
-        import os
-        from django.conf import settings
-        print('DATABASE USER:', settings.DATABASES['default']['USER'])
-        print('DATABASE HOST:', settings.DATABASES['default']['HOST'])
-        "
-        
         echo "=== Running migrations ==="
         python manage.py migrate
 
