@@ -71,11 +71,22 @@ jobs:
         EMAIL_HOST_PASSWORD=test
         EOF
         
+        echo "=== .env file contents ==="
         cat .env
-        echo "=== .env file created successfully ==="
+        echo "=== Checking current directory ==="
+        pwd
+        ls -la
+
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
 
     - name: Run migrations
       run: |
+        python manage.py check
         python manage.py migrate
 
     - name: Run tests with coverage
@@ -85,13 +96,13 @@ jobs:
 
     - name: Run specific app tests
       run: |
-        python manage.py test lms.tests
-        python manage.py test users.tests
+        python manage.py test lms.tests --verbosity=2
+        python manage.py test users.tests --verbosity=2
 
   deploy:
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/hm_35.2'
 
     steps:
     - name: Checkout code
@@ -105,7 +116,9 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           cd /var/www/myapp
-          git pull origin main
+          git fetch origin
+          git checkout hm_35.2
+          git pull origin hm_35.2
           source venv/bin/activate
           pip install -r requirements.txt
           python manage.py migrate
@@ -113,4 +126,5 @@ jobs:
           sudo systemctl daemon-reload
           sudo systemctl restart gunicorn
           sudo systemctl restart nginx
-          echo "Deployment completed successfully!"
+          echo " Deployment completed successfully!"
+          echo " Application is running at: http://$(curl -s ifconfig.me)"
