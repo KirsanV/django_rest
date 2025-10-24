@@ -54,21 +54,25 @@ jobs:
 
     - name: Create .env file for testing
       run: |
-        cp sample.env .env
-        echo "SECRET_KEY=test-secret-key-for-ci-cd-$(openssl rand -hex 32)" >> .env
-        echo "NAME=test_db" >> .env
-        echo "USER=postgres" >> .env
-        echo "PASSWORD=postgres" >> .env
-        echo "HOST=localhost" >> .env
-        echo "PORT=5432" >> .env
-        echo "STRIPE_API_KEY=sk_test_dummy" >> .env
-        echo "CELERY_BROKER_URL=redis://localhost:6379/0" >> .env
-        echo "CELERY_RESULT_BACKEND=redis://localhost:6379/0" >> .env
-        echo "CELERY_TIMEZONE=UTC" >> .env
-        echo "EMAIL_HOST_USER=test@example.com" >> .env
-        echo "EMAIL_HOST_PASSWORD=test" >> .env
-        echo "DEBUG=True" >> .env
-        echo "ALLOWED_HOSTS=localhost,127.0.0.1,testserver" >> .env
+        cat > .env << EOF
+        SECRET_KEY=test-secret-key-for-ci-cd-$(openssl rand -hex 32)
+        DEBUG=True
+        ALLOWED_HOSTS=localhost,127.0.0.1,testserver
+        NAME=test_db
+        USER=postgres
+        PASSWORD=postgres
+        HOST=localhost
+        PORT=5432
+        STRIPE_API_KEY=sk_test_dummy
+        CELERY_BROKER_URL=redis://localhost:6379/0
+        CELERY_RESULT_BACKEND=redis://localhost:6379/0
+        CELERY_TIMEZONE=UTC
+        EMAIL_HOST_USER=test@example.com
+        EMAIL_HOST_PASSWORD=test
+        EOF
+        
+        cat .env
+        echo "=== .env file created successfully ==="
 
     - name: Run migrations
       run: |
