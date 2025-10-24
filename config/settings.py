@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from celery.schedules import crontab
+
 
 load_dotenv()
 
@@ -22,9 +24,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_spectacular',
     'users',
     'lms',
     'django_extensions',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -64,8 +68,8 @@ DATABASES = {
         'NAME': os.getenv('NAME'),
         'USER': os.getenv('USER'),
         'PASSWORD': os.getenv('PASSWORD'),
-        'HOST': os.getenv('HOST'),
-        'PORT': os.getenv('PORT'),
+        'HOST': os.getenv('HOST', 'postgres'),
+        'PORT': os.getenv('PORT', '5432'),
     }
 }
 
@@ -113,4 +117,60 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'LMS API',
+    'DESCRIPTION': 'Документация по API проекта',
+    'VERSION': 'v1',
+    'OPENAPI_VERSION': '3.0.3',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'USE_SESSION_AUTH': False,
+    'SCHEMA_PATH_PREFIX': '/api/',
+}
+
+STRIPE_API_KEY = os.getenv('STRIPE_API_KEY')
+
+
+# CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+# CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+# CELERY_TIMEZONE = os.getenv('CELERY_TIMEZONE', 'UTC')
+# CELERY_TASK_TRACK_STARTED = os.getenv('CELERY_TASK_TRACK_STARTED', 'True').lower() in ('true', '1')
+# CELERY_TASK_TIME_LIMIT = int(os.getenv('CELERY_TASK_TIME_LIMIT', '1800'))
+
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+CELERY_TIMEZONE = os.getenv('CELERY_TIMEZONE', 'UTC')
+CELERY_TASK_TRACK_STARTED = os.getenv('CELERY_TASK_TRACK_STARTED', 'True').lower() in ('true', '1')
+CELERY_TASK_TIME_LIMIT = int(os.getenv('CELERY_TASK_TIME_LIMIT', '1800'))
+
+
+CELERY_BEAT_SCHEDULE = {
+    'sample-task-every-minute': {
+        'task': 'lms.tasks.sample_task',
+        'schedule': crontab(minute='*/1'),
+        'args': (),
+    },
+    'send-course-update-email-test': {
+        'task': 'lms.tasks.send_course_update_email',
+        'schedule': crontab(minute='*/1'),
+        'args': (1,),
+    },
+    'deactivate-inactive-users-daily': {
+        'task': 'users.tasks.deactivate_inactive_users',
+        'schedule': crontab(hour=0, minute=0),
+        'args': (30,),
+    },
+}
+
+
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+SERVER_EMAIL = EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

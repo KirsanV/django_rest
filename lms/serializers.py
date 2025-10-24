@@ -22,10 +22,10 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = '__all__'
 
-    def get_lessons_count(self, obj):
+    def get_lessons_count(self, obj) -> int:
         return obj.lessons.count()
 
-    def get_is_subscribed(self, obj):
+    def get_is_subscribed(self, obj) -> bool:
         request = self.context.get('request')
         user = getattr(request, 'user', None)
         if user and user.is_authenticated:
@@ -37,3 +37,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
+
+
+class MessageSerializer(serializers.Serializer):
+    message = serializers.CharField()
