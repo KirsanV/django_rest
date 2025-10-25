@@ -69,7 +69,7 @@ services:
     container_name: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${USER}          # ← Используем ваши имена переменных
+      POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASSWORD}
       POSTGRES_DB: ${NAME}
     volumes:
@@ -112,12 +112,12 @@ services:
     depends_on:
       - postgres
       - redis
-    command: celery -A config worker --loglevel=INFO
+    command: celery -A config worker --loglevel=INFO  # ← УБРАЛ collectstatic отсюда
     env_file:
       - .env
     volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
+      - static_volume:/app/static    # ← Только монтируем том
+      - media_volume:/app/media      # ← Только монтируем том
     networks:
       - app-network
 
@@ -128,12 +128,12 @@ services:
     depends_on:
       - postgres
       - redis
-    command: celery -A config beat --loglevel=INFO
+    command: celery -A config beat --loglevel=INFO  # ← УБРАЛ collectstatic отсюда
     env_file:
       - .env
     volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
+      - static_volume:/app/static    # ← Только монтируем том
+      - media_volume:/app/media      # ← Только монтируем том
     networks:
       - app-network
 
