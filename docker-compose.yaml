@@ -1,77 +1,12 @@
-#services:
-#  postgres:
-#    image: postgres:15
-#    container_name: postgres
-#    restart: unless-stopped
-#    ports:
-#      - "5432:5432"
-#    environment:
-#      POSTGRES_USER: ${USER}
-#      POSTGRES_PASSWORD: ${PASSWORD}
-#      POSTGRES_DB: ${NAME}
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data
-#
-#  redis:
-#    image: redis:7-alpine
-#    container_name: redis
-#    restart: unless-stopped
-#    ports:
-#      - "6379:6379"
-#
-#  django:
-#    build: .
-#    container_name: django
-#    depends_on:
-#      - postgres
-#      - redis
-#    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-#    ports:
-#      - "8000:8000"
-#    env_file:
-#      - .env
-#    volumes:
-#      - .:/app
-#
-#  celery:
-#    build: .
-#    container_name: celery
-#    depends_on:
-#      - postgres
-#      - redis
-#    command: celery -A config worker --loglevel=INFO
-#    env_file:
-#      - .env
-#    volumes:
-#      - .:/app
-#
-#  celery-beat:
-#    build: .
-#    container_name: celery-beat
-#    depends_on:
-#      - postgres
-#      - redis
-#    command: celery -A config beat --loglevel=INFO
-#    env_file:
-#      - .env
-#    volumes:
-#      - .:/app
-#
-#volumes:
-#  postgres_data:
-
-
-
-
 services:
   postgres:
     image: postgres:15
     container_name: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${USER}
-      POSTGRES_PASSWORD: ${PASSWORD}
-      POSTGRES_DB: ${NAME}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}           # ← Переменные окружения
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password123}
+      POSTGRES_DB: ${POSTGRES_DB:-lms_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -96,7 +31,7 @@ services:
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     env_file:
-      - .env
+      - .env  # ← .env с реальными секретами (НЕ в репозитории)
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
@@ -112,12 +47,12 @@ services:
     depends_on:
       - postgres
       - redis
-    command: celery -A config worker --loglevel=INFO  # ← УБРАЛ collectstatic отсюда
+    command: celery -A config worker --loglevel=INFO
     env_file:
-      - .env
+      - .env  # ← .env с реальными секретами
     volumes:
-      - static_volume:/app/static    # ← Только монтируем том
-      - media_volume:/app/media      # ← Только монтируем том
+      - static_volume:/app/static
+      - media_volume:/app/media
     networks:
       - app-network
 
@@ -128,12 +63,12 @@ services:
     depends_on:
       - postgres
       - redis
-    command: celery -A config beat --loglevel=INFO  # ← УБРАЛ collectstatic отсюда
+    command: celery -A config beat --loglevel=INFO
     env_file:
-      - .env
+      - .env  # ← .env с реальными секретами
     volumes:
-      - static_volume:/app/static    # ← Только монтируем том
-      - media_volume:/app/media      # ← Только монтируем том
+      - static_volume:/app/static
+      - media_volume:/app/media
     networks:
       - app-network
 
