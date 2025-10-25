@@ -101,7 +101,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: postgres      # ← Тестовые credentials
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
         ports:
@@ -140,11 +140,11 @@ jobs:
     - name: Run migrations
       env:
         SECRET_KEY: "test-key-123"
-        NAME: "test_db"           # ← Ваши имена переменных
-        USER: "postgres"          # ←
-        PASSWORD: "postgres"      # ←
-        HOST: "localhost"         # ← В GitHub Actions используем localhost
-        PORT: "5432"              # ←
+        NAME: "test_db"
+        USER: "postgres"
+        PASSWORD: "postgres"
+        HOST: "localhost"
+        PORT: "5432"
         CELERY_BROKER_URL: "redis://localhost:6379/0"
       run: |
         python manage.py migrate
@@ -163,7 +163,7 @@ jobs:
 
     - name: Build Docker images
       run: |
-        docker-compose -f docker-compose.yaml build
+        docker compose -f docker-compose.yaml build  # ← ИЗМЕНИЛ на docker compose
 
   deploy:
     runs-on: ubuntu-latest
@@ -181,7 +181,7 @@ jobs:
           cd /var/www/myapp
           git pull origin hm_final
           echo "${{ secrets.PRODUCTION_ENV }}" > .env
-          docker-compose down
-          docker-compose build
-          docker-compose up -d
+          docker compose down  # ← И здесь тоже
+          docker compose build  # ← И здесь
+          docker compose up -d  # ← И здесь
           echo "🚀 Application deployed successfully!"
