@@ -80,11 +80,13 @@
 
 # .github/workflows/deploy.yml
 
+# .github/workflows/deploy.yml
+
 name: Django CI/CD
 
 on:
   push:
-    branches: [ main, master, hm_35.2 ]
+    branches: [ main, master, hm_35.2, hm_final ]
   pull_request:
     branches: [ main, master ]
 

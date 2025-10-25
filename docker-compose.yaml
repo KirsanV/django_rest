@@ -63,116 +63,101 @@
 
 
 
-name: Django CI/CD
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
 
-on:
-  push:
-    branches: [ main, master, hm_35.2 ]
-  pull_request:
-    branches: [ main, master ]
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - app-network
 
-env:
-  PYTHON_VERSION: '3.13'
+  django:
+    build: .
+    container_name: django
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - .env
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    networks:
+      - app-network
+    expose:
+      - 8000
 
-jobs:
-  lint-and-test:
-    runs-on: ubuntu-latest
-    env:
-      TEST_ENV: true  # ← Добавляем флаг тестового окружения
+  celery:
+    build: .
+    container_name: celery
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    command: celery -A config worker --loglevel=INFO
+    env_file:
+      - .env
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    networks:
+      - app-network
 
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+  celery-beat:
+    build: .
+    container_name: celery-beat
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    command: celery -A config beat --loglevel=INFO
+    env_file:
+      - .env
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    networks:
+      - app-network
 
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nginx
+    restart: unless-stopped
+    depends_on:
+      - django
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/app/static
+      - media_volume:/app/media
+    networks:
+      - app-network
 
-    steps:
-    - uses: actions/checkout@v4
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install flake8 black
-
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-    - name: Check code formatting with black
-      run: |
-        black --check --diff . || echo "Formatting issues found"
-
-    - name: Wait for database
-      run: |
-        while ! pg_isready -h localhost -p 5432; do
-          echo "Waiting for database..."
-          sleep 2
-        done
-
-    - name: Run migrations
-      env:
-        SECRET_KEY: "test-key-123"
-        GITHUB_ACTIONS: true  # ← Явно указываем, что это GitHub Actions
-      run: |
-        python manage.py migrate
-
-    - name: Run tests
-      env:
-        SECRET_KEY: "test-key-123"
-        GITHUB_ACTIONS: true
-      run: |
-        python manage.py test
-
-    - name: Build Docker images
-      run: |
-        docker-compose -f docker-compose.yaml build
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: lint-and-test
-    if: github.ref == 'refs/heads/hm_35.2'
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Deploy to server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        script: |
-          cd /var/www/myapp
-          git pull origin hm_35.2
-          echo "${{ secrets.PRODUCTION_ENV }}" > .env
-          docker-compose down
-          docker-compose pull
-          docker-compose build
-          docker-compose up -d
-          docker system prune -f
-          echo "🚀 Application deployed successfully!"
+networks:
+  app-network:
+    driver: bridge
