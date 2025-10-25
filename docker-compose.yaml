@@ -1,10 +1,8 @@
 services:
   postgres:
     image: postgres:15
-    container_name: postgres
-    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}           # ← Переменные окружения
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password123}
       POSTGRES_DB: ${POSTGRES_DB:-lms_db}
     volumes:
@@ -14,15 +12,11 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis
-    restart: unless-stopped
     networks:
       - app-network
 
   django:
     build: .
-    container_name: django
-    restart: unless-stopped
     depends_on:
       - postgres
       - redis
@@ -31,7 +25,7 @@ services:
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     env_file:
-      - .env  # ← .env с реальными секретами (НЕ в репозитории)
+      - .env
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
@@ -40,42 +34,8 @@ services:
     expose:
       - 8000
 
-  celery:
-    build: .
-    container_name: celery
-    restart: unless-stopped
-    depends_on:
-      - postgres
-      - redis
-    command: celery -A config worker --loglevel=INFO
-    env_file:
-      - .env  # ← .env с реальными секретами
-    volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
-    networks:
-      - app-network
-
-  celery-beat:
-    build: .
-    container_name: celery-beat
-    restart: unless-stopped
-    depends_on:
-      - postgres
-      - redis
-    command: celery -A config beat --loglevel=INFO
-    env_file:
-      - .env  # ← .env с реальными секретами
-    volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
-    networks:
-      - app-network
-
   nginx:
     image: nginx:1.25-alpine
-    container_name: nginx
-    restart: unless-stopped
     depends_on:
       - django
     ports:

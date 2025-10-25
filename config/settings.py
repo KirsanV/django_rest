@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from celery.schedules import crontab
-from django.core.exceptions import ImproperlyConfigured
 
 
 load_dotenv()

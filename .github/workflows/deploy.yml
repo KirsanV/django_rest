@@ -79,7 +79,7 @@ jobs:
 
     - name: Build Docker images
       run: |
-        docker compose -f docker-compose.yaml build  # ← ИЗМЕНИЛ на docker compose
+        docker compose -f docker-compose.yaml build
 
   deploy:
     runs-on: ubuntu-latest
@@ -97,7 +97,7 @@ jobs:
           cd /var/www/myapp
           git pull origin hm_final
           echo "${{ secrets.PRODUCTION_ENV }}" > .env
-          docker compose down  # ← И здесь тоже
-          docker compose build  # ← И здесь
-          docker compose up -d  # ← И здесь
+          docker compose down
+          docker compose build
+          docker compose up -d
           echo "🚀 Application deployed successfully!"
