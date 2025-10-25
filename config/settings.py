@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from celery.schedules import crontab
+from django.core.exceptions import ImproperlyConfigured
 
 
 load_dotenv()
@@ -9,7 +10,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-test-key-for-ci-cd-12345')
+
 
 DEBUG = True
 
@@ -68,7 +70,7 @@ DATABASES = {
         'NAME': os.getenv('NAME'),
         'USER': os.getenv('USER'),
         'PASSWORD': os.getenv('PASSWORD'),
-        'HOST': os.getenv('HOST', 'postgres'),
+        'HOST': os.getenv('HOST', 'localhost'),
         'PORT': os.getenv('PORT', '5432'),
     }
 }
