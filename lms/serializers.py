@@ -7,10 +7,8 @@ from .validators import validate_youtube_url
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
-        fields = '__all__'
-        extra_kwargs = {
-            'video_url': {'validators': [validate_youtube_url]}
-        }
+        fields = "__all__"
+        extra_kwargs = {"video_url": {"validators": [validate_youtube_url]}}
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -20,14 +18,14 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = '__all__'
+        fields = "__all__"
 
     def get_lessons_count(self, obj) -> int:
         return obj.lessons.count()
 
     def get_is_subscribed(self, obj) -> bool:
-        request = self.context.get('request')
-        user = getattr(request, 'user', None)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
         if user and user.is_authenticated:
             return Subscription.objects.filter(user=user, course=obj).exists()
         return False
@@ -36,7 +34,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = '__all__'
+        fields = "__all__"
 
 
 class MessageSerializer(serializers.Serializer):

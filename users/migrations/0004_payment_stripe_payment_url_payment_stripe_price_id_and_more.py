@@ -6,33 +6,43 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0003_alter_user_managers'),
+        ("users", "0003_alter_user_managers"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='payment',
-            name='stripe_payment_url',
-            field=models.URLField(blank=True, null=True, verbose_name='Stripe Payment URL'),
+            model_name="payment",
+            name="stripe_payment_url",
+            field=models.URLField(
+                blank=True, null=True, verbose_name="Stripe Payment URL"
+            ),
         ),
         migrations.AddField(
-            model_name='payment',
-            name='stripe_price_id',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='Stripe Price ID'),
+            model_name="payment",
+            name="stripe_price_id",
+            field=models.CharField(
+                blank=True, max_length=255, null=True, verbose_name="Stripe Price ID"
+            ),
         ),
         migrations.AddField(
-            model_name='payment',
-            name='stripe_product_id',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='Stripe Product ID'),
+            model_name="payment",
+            name="stripe_product_id",
+            field=models.CharField(
+                blank=True, max_length=255, null=True, verbose_name="Stripe Product ID"
+            ),
         ),
         migrations.AddField(
-            model_name='payment',
-            name='stripe_session_id',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='Stripe Session ID'),
+            model_name="payment",
+            name="stripe_session_id",
+            field=models.CharField(
+                blank=True, max_length=255, null=True, verbose_name="Stripe Session ID"
+            ),
         ),
         migrations.AddField(
-            model_name='payment',
-            name='stripe_status',
-            field=models.CharField(blank=True, max_length=100, null=True, verbose_name='Stripe Status'),
+            model_name="payment",
+            name="stripe_status",
+            field=models.CharField(
+                blank=True, max_length=100, null=True, verbose_name="Stripe Status"
+            ),
         ),
     ]

@@ -9,10 +9,14 @@ class IsOwner(permissions.BasePermission):
 class IsModerator(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and getattr(request.user, 'is_moderator', False)
+        return request.user.is_authenticated and getattr(
+            request.user, "is_moderator", False
+        )
 
 
 class IsNotModerator(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and not getattr(request.user, 'is_moderator', False)
+        return request.user.is_authenticated and not getattr(
+            request.user, "is_moderator", False
+        )

@@ -3,21 +3,24 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from lms.models import Course, Lesson
 
+
 class Command(BaseCommand):
-    help = 'Создает группу Модераторы и назначает права'
+    help = "Создает группу Модераторы и назначает права"
 
     def handle(self, *args, **kwargs):
-        group, created = Group.objects.get_or_create(name='Модератор')
-        self.stdout.write(f'Группа {"создана" if created else "уже существует"}: {group.name}')
+        group, created = Group.objects.get_or_create(name="Модератор")
+        self.stdout.write(
+            f'Группа {"создана" if created else "уже существует"}: {group.name}'
+        )
 
         content_type_course = ContentType.objects.get_for_model(Course)
         content_type_lesson = ContentType.objects.get_for_model(Lesson)
 
         permissions_codenames = [
-            ('view_course', content_type_course),
-            ('change_course', content_type_course),
-            ('view_lesson', content_type_lesson),
-            ('change_lesson', content_type_lesson),
+            ("view_course", content_type_course),
+            ("change_course", content_type_course),
+            ("view_lesson", content_type_lesson),
+            ("change_lesson", content_type_lesson),
         ]
 
         permissions = []
@@ -26,4 +29,4 @@ class Command(BaseCommand):
             permissions.append(perm)
 
         group.permissions.set(permissions)
-        self.stdout.write('Права успешно назначены группе.')
+        self.stdout.write("Права успешно назначены группе.")
